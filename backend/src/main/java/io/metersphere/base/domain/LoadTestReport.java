@@ -21,7 +21,25 @@ public class LoadTestReport implements Serializable {
 
     private String triggerMode;
 
-    private String description;
+    private String fileId;
+
+    private String maxUsers;
+
+    private String avgResponseTime;
+
+    private String tps;
+
+    private String projectId;
+
+    private String testName;
+
+    private Long testStartTime;
+
+    private Long testEndTime;
+
+    private Long testDuration;
+
+    private String testResourcePoolId;
 
     private static final long serialVersionUID = 1L;
 }

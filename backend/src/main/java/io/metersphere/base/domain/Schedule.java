@@ -23,7 +23,17 @@ public class Schedule implements Serializable {
 
     private String userId;
 
-    private String customData;
+    private String workspaceId;
+
+    private Long createTime;
+
+    private Long updateTime;
+
+    private String projectId;
+
+    private String name;
+
+    private String config;
 
     private static final long serialVersionUID = 1L;
 }

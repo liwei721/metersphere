@@ -11,9 +11,12 @@
     <result column="enable" jdbcType="BIT" property="enable" />
     <result column="resource_id" jdbcType="VARCHAR" property="resourceId" />
     <result column="user_id" jdbcType="VARCHAR" property="userId" />
-  </resultMap>
-  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="io.metersphere.base.domain.Schedule">
-    <result column="custom_data" jdbcType="LONGVARCHAR" property="customData" />
+    <result column="workspace_id" jdbcType="VARCHAR" property="workspaceId" />
+    <result column="create_time" jdbcType="BIGINT" property="createTime" />
+    <result column="update_time" jdbcType="BIGINT" property="updateTime" />
+    <result column="project_id" jdbcType="VARCHAR" property="projectId" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="config" jdbcType="VARCHAR" property="config" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -74,27 +77,9 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, `key`, `type`, `value`, `group`, job, `enable`, resource_id, user_id
+    id, `key`, `type`, `value`, `group`, job, `enable`, resource_id, user_id, workspace_id, 
+    create_time, update_time, project_id, `name`, config
   </sql>
-  <sql id="Blob_Column_List">
-    custom_data
-  </sql>
-  <select id="selectByExampleWithBLOBs" parameterType="io.metersphere.base.domain.ScheduleExample" resultMap="ResultMapWithBLOBs">
-    select
-    <if test="distinct">
-      distinct
-    </if>
-    <include refid="Base_Column_List" />
-    ,
-    <include refid="Blob_Column_List" />
-    from schedule
-    <if test="_parameter != null">
-      <include refid="Example_Where_Clause" />
-    </if>
-    <if test="orderByClause != null">
-      order by ${orderByClause}
-    </if>
-  </select>
   <select id="selectByExample" parameterType="io.metersphere.base.domain.ScheduleExample" resultMap="BaseResultMap">
     select
     <if test="distinct">
@@ -109,11 +94,9 @@
       order by ${orderByClause}
     </if>
   </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
-    ,
-    <include refid="Blob_Column_List" />
     from schedule
     where id = #{id,jdbcType=VARCHAR}
   </select>
@@ -131,11 +114,15 @@
     insert into schedule (id, `key`, `type`, 
       `value`, `group`, job, 
       `enable`, resource_id, user_id, 
-      custom_data)
+      workspace_id, create_time, update_time, 
+      project_id, `name`, config
+      )
     values (#{id,jdbcType=VARCHAR}, #{key,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR}, 
       #{value,jdbcType=VARCHAR}, #{group,jdbcType=VARCHAR}, #{job,jdbcType=VARCHAR}, 
       #{enable,jdbcType=BIT}, #{resourceId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, 
-      #{customData,jdbcType=LONGVARCHAR})
+      #{workspaceId,jdbcType=VARCHAR}, #{createTime,jdbcType=BIGINT}, #{updateTime,jdbcType=BIGINT}, 
+      #{projectId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{config,jdbcType=VARCHAR}
+      )
   </insert>
   <insert id="insertSelective" parameterType="io.metersphere.base.domain.Schedule">
     insert into schedule
@@ -167,8 +154,23 @@
       <if test="userId != null">
         user_id,
       </if>
-      <if test="customData != null">
-        custom_data,
+      <if test="workspaceId != null">
+        workspace_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="projectId != null">
+        project_id,
+      </if>
+      <if test="name != null">
+        `name`,
+      </if>
+      <if test="config != null">
+        config,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -199,8 +201,23 @@
       <if test="userId != null">
         #{userId,jdbcType=VARCHAR},
       </if>
-      <if test="customData != null">
-        #{customData,jdbcType=LONGVARCHAR},
+      <if test="workspaceId != null">
+        #{workspaceId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=BIGINT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=BIGINT},
+      </if>
+      <if test="projectId != null">
+        #{projectId,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="config != null">
+        #{config,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -240,26 +257,25 @@
       <if test="record.userId != null">
         user_id = #{record.userId,jdbcType=VARCHAR},
       </if>
-      <if test="record.customData != null">
-        custom_data = #{record.customData,jdbcType=LONGVARCHAR},
+      <if test="record.workspaceId != null">
+        workspace_id = #{record.workspaceId,jdbcType=VARCHAR},
+      </if>
+      <if test="record.createTime != null">
+        create_time = #{record.createTime,jdbcType=BIGINT},
+      </if>
+      <if test="record.updateTime != null">
+        update_time = #{record.updateTime,jdbcType=BIGINT},
+      </if>
+      <if test="record.projectId != null">
+        project_id = #{record.projectId,jdbcType=VARCHAR},
+      </if>
+      <if test="record.name != null">
+        `name` = #{record.name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.config != null">
+        config = #{record.config,jdbcType=VARCHAR},
       </if>
     </set>
-    <if test="_parameter != null">
-      <include refid="Update_By_Example_Where_Clause" />
-    </if>
-  </update>
-  <update id="updateByExampleWithBLOBs" parameterType="map">
-    update schedule
-    set id = #{record.id,jdbcType=VARCHAR},
-      `key` = #{record.key,jdbcType=VARCHAR},
-      `type` = #{record.type,jdbcType=VARCHAR},
-      `value` = #{record.value,jdbcType=VARCHAR},
-      `group` = #{record.group,jdbcType=VARCHAR},
-      job = #{record.job,jdbcType=VARCHAR},
-      `enable` = #{record.enable,jdbcType=BIT},
-      resource_id = #{record.resourceId,jdbcType=VARCHAR},
-      user_id = #{record.userId,jdbcType=VARCHAR},
-      custom_data = #{record.customData,jdbcType=LONGVARCHAR}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -274,7 +290,13 @@
       job = #{record.job,jdbcType=VARCHAR},
       `enable` = #{record.enable,jdbcType=BIT},
       resource_id = #{record.resourceId,jdbcType=VARCHAR},
-      user_id = #{record.userId,jdbcType=VARCHAR}
+      user_id = #{record.userId,jdbcType=VARCHAR},
+      workspace_id = #{record.workspaceId,jdbcType=VARCHAR},
+      create_time = #{record.createTime,jdbcType=BIGINT},
+      update_time = #{record.updateTime,jdbcType=BIGINT},
+      project_id = #{record.projectId,jdbcType=VARCHAR},
+      `name` = #{record.name,jdbcType=VARCHAR},
+      config = #{record.config,jdbcType=VARCHAR}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -306,23 +328,25 @@
       <if test="userId != null">
         user_id = #{userId,jdbcType=VARCHAR},
       </if>
-      <if test="customData != null">
-        custom_data = #{customData,jdbcType=LONGVARCHAR},
+      <if test="workspaceId != null">
+        workspace_id = #{workspaceId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=BIGINT},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=BIGINT},
+      </if>
+      <if test="projectId != null">
+        project_id = #{projectId,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        `name` = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="config != null">
+        config = #{config,jdbcType=VARCHAR},
       </if>
     </set>
-    where id = #{id,jdbcType=VARCHAR}
-  </update>
-  <update id="updateByPrimaryKeyWithBLOBs" parameterType="io.metersphere.base.domain.Schedule">
-    update schedule
-    set `key` = #{key,jdbcType=VARCHAR},
-      `type` = #{type,jdbcType=VARCHAR},
-      `value` = #{value,jdbcType=VARCHAR},
-      `group` = #{group,jdbcType=VARCHAR},
-      job = #{job,jdbcType=VARCHAR},
-      `enable` = #{enable,jdbcType=BIT},
-      resource_id = #{resourceId,jdbcType=VARCHAR},
-      user_id = #{userId,jdbcType=VARCHAR},
-      custom_data = #{customData,jdbcType=LONGVARCHAR}
     where id = #{id,jdbcType=VARCHAR}
   </update>
   <update id="updateByPrimaryKey" parameterType="io.metersphere.base.domain.Schedule">
@@ -334,7 +358,13 @@
       job = #{job,jdbcType=VARCHAR},
       `enable` = #{enable,jdbcType=BIT},
       resource_id = #{resourceId,jdbcType=VARCHAR},
-      user_id = #{userId,jdbcType=VARCHAR}
+      user_id = #{userId,jdbcType=VARCHAR},
+      workspace_id = #{workspaceId,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=BIGINT},
+      update_time = #{updateTime,jdbcType=BIGINT},
+      project_id = #{projectId,jdbcType=VARCHAR},
+      `name` = #{name,jdbcType=VARCHAR},
+      config = #{config,jdbcType=VARCHAR}
     where id = #{id,jdbcType=VARCHAR}
   </update>
 </mapper>

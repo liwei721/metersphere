@@ -1,130 +1,171 @@
 <template>
-  <el-main v-loading="result.loading">
-    <el-form :model="environment" :rules="rules" ref="from">
+  <el-main v-loading="result.loading" class="environment-edit" style="margin-left: 0px">
+    <el-form :model="environment" :rules="rules" ref="environment">
 
       <span>{{$t('api_test.environment.name')}}</span>
-      <el-form-item
-        prop="name">
-        <el-input v-model="environment.name" :placeholder="this.$t('commons.input_name')" clearable></el-input>
+      <el-form-item prop="name">
+        <el-input v-model="environment.name" :disabled="isReadOnly" :placeholder="this.$t('commons.input_name')" clearable/>
       </el-form-item>
 
-      <span>{{$t('api_test.environment.socket')}}</span>
-      <el-form-item
-        prop="socket">
-        <el-input v-model="environment.socket" :placeholder="$t('api_test.request.url_description')" clearable>
-          <template v-slot:prepend>
-            <el-select v-model="environment.protocol" class="request-protocol-select">
-              <el-option label="http://" value="http"/>
-              <el-option label="https://" value="https"/>
-            </el-select>
-          </template>
-        </el-input>
-      </el-form-item>
 
-      <span>{{$t('api_test.environment.globalVariable')}}</span>
-      <ms-api-scenario-variables :items="environment.variables"/>
+      <el-tabs v-model="activeName">
 
-      <span>{{$t('api_test.request.headers')}}</span>
-      <ms-api-key-value :items="environment.headers"/>
+        <el-tab-pane :label="$t('api_test.environment.common_config')" name="common">
+          <ms-environment-common-config :common-config="environment.config.commonConfig" ref="commonConfig" :is-read-only="isReadOnly"/>
+        </el-tab-pane>
+
+        <el-tab-pane :label="$t('api_test.environment.http_config')" name="http">
+          <ms-environment-http-config :project-id="projectId" :http-config="environment.config.httpConfig" ref="httpConfig" :is-read-only="isReadOnly"/>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('api_test.environment.database_config')" name="sql">
+          <ms-database-config :configs="environment.config.databaseConfigs" :is-read-only="isReadOnly"/>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('api_test.environment.tcp_config')" name="tcp">
+          <ms-tcp-config :config="environment.config.tcpConfig" :is-read-only="isReadOnly"/>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('commons.ssl.config')" name="ssl">
+          <ms-environment-s-s-l-config :project-id="projectId" :ssl-config="environment.config.sslConfig" :is-read-only="isReadOnly"/>
+        </el-tab-pane>
+      </el-tabs>
 
       <div class="environment-footer">
-        <el-button type="primary" @click="save">{{this.$t('commons.save')}}</el-button>
+        <ms-dialog-footer
+          @cancel="cancel"
+          @confirm="save()"/>
       </div>
-
     </el-form>
   </el-main>
 </template>
 
 <script>
-    import MsApiScenarioVariables from "../ApiScenarioVariables";
-    import MsApiKeyValue from "../ApiKeyValue";
+  import MsApiScenarioVariables from "../ApiScenarioVariables";
+  import MsApiKeyValue from "../ApiKeyValue";
+  import MsDialogFooter from "../../../../common/components/MsDialogFooter";
+  import {REQUEST_HEADERS} from "@/common/js/constants";
+  import {Environment} from "../../model/EnvironmentModel";
+  import MsApiHostTable from "../ApiHostTable";
+  import MsDatabaseConfig from "../request/database/DatabaseConfig";
+  import MsEnvironmentHttpConfig from "./EnvironmentHttpConfig";
+  import MsEnvironmentCommonConfig from "./EnvironmentCommonConfig";
+  import MsEnvironmentSSLConfig from "./EnvironmentSSLConfig";
 
-    export default {
-      name: "EnvironmentEdit",
-      components: {MsApiKeyValue, MsApiScenarioVariables},
-      props: {
-        environment: {
-          type: Object,
-          default() {
-            return {variables: [{}], headers: [{}], protocol: 'https'};
-          }
-        }
+  import MsTcpConfig from "@/business/components/api/test/components/request/tcp/TcpConfig";
+  import {getUUID} from "@/common/js/utils";
+
+  export default {
+    name: "EnvironmentEdit",
+    components: {
+      MsTcpConfig,
+      MsEnvironmentCommonConfig,
+      MsEnvironmentHttpConfig,
+      MsEnvironmentSSLConfig,
+      MsDatabaseConfig, MsApiHostTable, MsDialogFooter, MsApiKeyValue, MsApiScenarioVariables
+    },
+    props: {
+      environment: new Environment(),
+      projectId: String,
+      isReadOnly: {
+        type: Boolean,
+        default: false
       },
-      data() {
-        let socketValidator = (rule, value, callback) => {
-          if (!this.validateSocket(value)) {
-            callback(new Error(this.$t('commons.formatErr')));
+    },
+    data() {
+
+      return {
+        result: {},
+        envEnable: false,
+        rules: {
+          name: [
+            {required: true, message: this.$t('commons.input_name'), trigger: 'blur'},
+            {max: 64, message: this.$t('commons.input_limit', [1, 64]), trigger: 'blur'}
+          ],
+        },
+        headerSuggestions: REQUEST_HEADERS,
+        activeName: 'common'
+      }
+    },
+    watch: {
+      environment: function (o) {
+        this.envEnable = o.enable;
+      }
+    },
+    methods: {
+      save() {
+        this.$refs['environment'].validate((valid) => {
+          if (valid && this.$refs.commonConfig.validate() && this.$refs.httpConfig.validate()) {
+            this._save(this.environment);
+          }
+        });
+      },
+      validate() {
+        let isValidate = false;
+        this.$refs['environment'].validate((valid) => {
+          if (valid && this.$refs.commonConfig.validate() && this.$refs.httpConfig.validate()) {
+            isValidate = true;
           } else {
-            callback();
+            isValidate = false;
           }
-        };
-        return {
-          result: {},
-          rules: {
-            name :[{required: true, message: this.$t('commons.input_name'), trigger: 'blur'}],
-            socket :[{required: true, validator: socketValidator, trigger: 'blur'}],
-          },
-        }
+        });
+        return isValidate;
       },
-      methods: {
-        save() {
-          this.$refs['from'].validate((valid) => {
-            if (valid) {
-             this._save();
-            } else  {
-              return false;
+      geFiles(obj) {
+        let uploadFiles = [];
+        obj.uploadIds = [];
+        if (obj.config && obj.config.sslConfig && obj.config.sslConfig.files) {
+          obj.config.sslConfig.files.forEach(item => {
+            if (item.file && item.file.size > 0) {
+              if (!item.id) {
+                item.name = item.file.name;
+                item.id = getUUID();
+              }
+              obj.uploadIds.push(item.id);
+              uploadFiles.push(item.file);
+            }
+          })
+        }
+        return uploadFiles;
+      },
+      _save(environment) {
+        let bodyFiles = this.geFiles(environment);
+        let param = this.buildParam(environment);
+        let url = '/api/environment/add';
+        if (param.id) {
+          url = '/api/environment/update';
+        }
+        this.$fileUpload(url, null, bodyFiles, param, response => {
+          //this.result = this.$post(url, param, response => {
+          if (!param.id) {
+            environment.id = response.data;
+          }
+          this.$success(this.$t('commons.save_success'));
+          this.$emit('refreshAfterSave');   //在EnvironmentList.vue中监听，使在数据修改后进行刷新
+        });
+      },
+      buildParam: function (environment) {
+        let param = {};
+        Object.assign(param, environment);
+        let hosts = param.config.commonConfig.hosts;
+        if (hosts != undefined) {
+          let validHosts = [];
+          // 去除掉未确认的host
+          hosts.forEach(host => {
+            if (host.status === '') {
+              validHosts.push(host);
             }
           });
-        },
-        _save() {
-          let param = this.buildParam();
-          let url = '/api/environment/add';
-          if (param.id) {
-            url = '/api/environment/update';
-          }
-          this.result = this.$post(url, param,  response => {
-            this.environment.id = response.data;
-            this.$success(this.$t('commons.save_success'));
-          });
-        },
-        buildParam() {
-          let param = {};
-          Object.assign(param, this.environment);
-          param.variables = JSON.stringify(this.environment.variables);
-          param.headers = JSON.stringify(this.environment.headers);
-          return param;
-        },
-        validateSocket(socket) {
-          if (!socket) return;
-          let socketInfo = socket.split(":");
-          if (socketInfo.length > 2) {
-            return false;
-          }
-          let host = socketInfo[0];
-          let port = socketInfo[1];
-          if (!this.validateHost(host) || !(port == undefined || this.validatePort(port))) {
-            return false;
-          }
-          this.environment.domain = host;
-          this.environment.port = port;
-          return true;
-        },
-        validateHost(host) {
-          let hostReg =  /^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$/;
-          if (hostReg.test(host) || host === 'localhost') {
-            return true;
-          }
-          return false;
-        },
-        validatePort(port) {
-          let portReg = /^[1-9]\d*$/;
-          if (portReg.test(port) && 1 <= 1*port && 1*port <= 65535){
-            return true
-          }
-          return false;
+          param.config.commonConfig.hosts = validHosts;
         }
-      }
-    }
+        param.config = JSON.stringify(param.config);
+        return param;
+      },
+      cancel() {
+        this.$emit('close');
+      },
+      clearValidate() {
+        this.$refs["environment"].clearValidate();
+      },
+    },
+  }
 </script>
 
 <style scoped>
@@ -132,10 +173,9 @@
   .el-main {
     border: solid 1px #EBEEF5;
     margin-left: 200px;
-  }
+    min-height: 400px;
+    max-height: 700px;
 
-  .request-protocol-select {
-    width: 90px;
   }
 
   .el-row {

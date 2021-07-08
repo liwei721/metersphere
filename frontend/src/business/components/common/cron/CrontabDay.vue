@@ -23,8 +23,8 @@
 		<el-form-item>
 			<el-radio v-model='radioValue' :label="4">
         {{$t('schedule.cron.from')}}
-				<el-input-number v-model='average01' :min="0" :max="31" /> {{$t('schedule.cron.day_unit')}}{{$t('schedule.cron.start')}}，{{$t('schedule.cron.every')}}
-				<el-input-number v-model='average02' :min="0" :max="31" /> {{$t('schedule.cron.day')}}{{$t('schedule.cron.execute_once')}}
+				<el-input-number v-model='average01' :min="1" :max="31" /> {{$t('schedule.cron.day_unit')}}{{$t('schedule.cron.start')}}，{{$t('schedule.cron.every')}}
+				<el-input-number v-model='average02' :min="1" :max="31" /> {{$t('schedule.cron.day')}}{{$t('schedule.cron.execute_once')}}
 			</el-radio>
 		</el-form-item>
 
@@ -154,19 +154,19 @@ export default {
 	computed: {
 		// 计算两个周期值
 		cycleTotal: function () {
-			this.cycle01 = this.checkNum(this.cycle01, 1, 31)
-			this.cycle02 = this.checkNum(this.cycle02, 1, 31)
+			this.checkNum(this.cycle01, 1, 31)
+			this.checkNum(this.cycle02, 1, 31)
 			return this.cycle01 + '-' + this.cycle02;
 		},
 		// 计算平均用到的值
 		averageTotal: function () {
-			this.average01 = this.checkNum(this.average01, 1, 31)
-			this.average02 = this.checkNum(this.average02, 1, 31)
+			this.checkNum(this.average01, 1, 31)
+			this.checkNum(this.average02, 1, 31)
 			return this.average01 + '/' + this.average02;
 		},
 		// 计算工作日格式
 		workdayCheck: function () {
-			this.workday = this.checkNum(this.workday, 1, 31)
+			this.checkNum(this.workday, 1, 31)
 			return this.workday;
 		},
 		// 计算勾选的checkbox值合集

@@ -1,6 +1,5 @@
 package io.metersphere.track.dto;
 
-import io.metersphere.base.domain.TestPlan;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,4 +11,5 @@ public class TestPlanDTOWithMetric extends TestPlanDTO {
     private Integer passed;
     private Integer tested;
     private Integer total;
+    private String createUser;
 }
